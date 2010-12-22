@@ -24,6 +24,7 @@ GrettyServer server = [
     webContexts: [
         "/ping" : [
             default: {
+                println request
                 response.redirect("http://www.google.com")
             }
         ]
