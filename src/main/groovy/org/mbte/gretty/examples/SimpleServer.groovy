@@ -25,7 +25,7 @@ GrettyServer server = [
         "/ping" : [
             default: {
                 println request
-                response.redirect("http://www.google.com")
+                response.text = "OK"
             }
         ]
     ]
