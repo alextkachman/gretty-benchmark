@@ -35,6 +35,12 @@ dependencies {
 }
 
 
+task pull(type:Exec) {
+    commandLine(["git", "pull"])
+}
+
+compileJava.dependsOn << pull
+
 task run(type:JavaExec, dependsOn:'classes') {
     main = 'org.mbte.gretty.examples.SimpleServer'
     classpath =  sourceSets.main.runtimeClasspath
