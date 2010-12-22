@@ -44,7 +44,7 @@ compileJava.dependsOn << pull
 task run(type:JavaExec, dependsOn:'classes') {
     main = 'org.mbte.gretty.examples.SimpleServer'
     classpath =  sourceSets.main.runtimeClasspath
-    jvmArgs = "-server -Xms4096 -Xmx4096"
+    jvmArgs = ['-server',  '-Xms4096m', '-Xmx4096m']
 }
 
 task wrapper(type: Wrapper) {
