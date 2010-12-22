@@ -31,4 +31,5 @@ GrettyServer server = [
 ]
 server.start ()
 
+println server.localAddress
 println 'Started...'
