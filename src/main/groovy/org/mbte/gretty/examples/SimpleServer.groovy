@@ -19,15 +19,15 @@
 import org.mbte.gretty.httpserver.GrettyServer
 
 GrettyServer server = [
-    staticResources: "META-INF/web-socket-js",
-
     localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
 
-    public: {
-        websocket("/") { msg ->
-            println msg
-        }
-    }
+    webContexts: [
+        "/ping" : [
+            default: {
+                response.redirect("http://www.google.com")
+            }
+        ]
+    ]
 ]
 server.start ()
 
