@@ -14,6 +14,31 @@
  * limitations under the License.
  */
 
+apply plugin: 'groovy'
+apply plugin: 'idea'
+
+gppVersion = "0.4.113"
+
+repositories {
+  mavenRepo urls: 'http://groovypp.artifactoryonline.com/groovypp/libs-releases-local/'
+
+  mavenCentral ()
+  mavenRepo urls: 'http://repository.jboss.org/nexus/content/groups/public/'
+}
+
+dependencies {
+    groovy group: 'org.mbte.groovypp', name: 'groovypp', version: "$gppVersion"
+
+    compile group: 'org.mbte.groovypp', name: 'groovypp', version: "$gppVersion"
+    compile group: 'org.mbte.groovypp', name: 'gretty', version: "0.4.105"
+}
+
+
+task run(type:JavaExec, dependsOn:'classes') {
+    main = 'org.mbte.gretty.examples.SimpleServer'
+    classpath =  sourceSets.main.runtimeClasspath
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '0.9-rc-3'
 }
