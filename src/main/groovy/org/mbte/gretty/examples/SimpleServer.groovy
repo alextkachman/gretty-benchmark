@@ -40,5 +40,15 @@ GrettyServer server = [
 ]
 server.start ()
 
+Thread t = [
+        run: {
+            for(;;) {
+                Thread.currentThread().sleep(3000)
+                println server.ioMonitor.bytesSent
+            }
+        }
+]
+t.start()
+
 println server.localAddress
 println 'Started...'
