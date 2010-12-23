@@ -18,9 +18,10 @@
 
 import org.mbte.gretty.httpserver.GrettyServer
 import redis.clients.jedis.Jedis
+import redis.clients.jedis.JedisPool
+import redis.clients.jedis.JedisException
 
-Jedis jedis = ["10.251.53.155"]
-jedis.connect()
+JedisPool jedisPool = ["10.251.53.155", 6389]
 
 GrettyServer server = [
     localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
@@ -28,11 +29,22 @@ GrettyServer server = [
     webContexts: [
         "/ping" : [
             default: {
-                synchronized(jedis) {
-                    def var = request.parameters['grsessionid']
-                    if(var)
+                def var = request.parameters['grsessionid']
+                if(var) {
+                    Jedis jedis
+                    try {
+                        jedis = jedisPool.getResource()
                         jedis.set (var[0], "blah-blah-blah")
+                    }
+                    catch(JedisException e) {
+                        if(jedis)
+                            jedisPool.returnBrokenResource jedis
+                        e.printStackTrace()
+                        throw e
+                    }
+                    jedisPool.returnResource jedis
                 }
+
                 response.html = """
 <html>
     <head>
