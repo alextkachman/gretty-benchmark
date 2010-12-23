@@ -17,6 +17,10 @@
 @Typed package org.mbte.gretty.examples
 
 import org.mbte.gretty.httpserver.GrettyServer
+import redis.clients.jedis.Jedis
+
+Jedis jedis = ["localhost"]
+jedis.connect()
 
 GrettyServer server = [
     localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
@@ -24,13 +28,17 @@ GrettyServer server = [
     webContexts: [
         "/ping" : [
             default: {
+                synchronized(jedis) {
+                    def var = request.parameters['grsessionid'][0]
+                    jedis.set (var, "blah-blah-blah")
+                }
                 response.html = """
 <html>
     <head>
         <title>Ping page</title>
     </head>
     <body>
-        Hello!
+        Hello, World!
     </body>
 </html>
                 """
