@@ -27,9 +27,9 @@ import org.mbte.gretty.httpserver.GrettyHttpRequest
 import groovypp.concurrent.ResourcePool
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
-def clientsNumber = 25000
+def clientsNumber = 65000
 
-def iterationPerClient = 100
+def iterationPerClient = 10
 
 def totalIterations = clientsNumber * iterationPerClient
 
@@ -38,7 +38,7 @@ def cdl = new CountDownLatch(totalIterations)
 HttpClientPool load = [
     remoteAddress:new InetSocketAddress("my-load-balancer-680767449.us-east-1.elb.amazonaws.com", 80),
 
-    maxClientsConnectingConcurrently: 100,
+    maxClientsConnectingConcurrently: 1000,
 
     clientsNumber: clientsNumber,
 
