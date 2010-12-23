@@ -80,7 +80,6 @@ for(i in 0..<totalIterations) {
                 }
                 catch(e) {
                     printStat "C$i: $e"
-                    e.printStackTrace()
                     load.allocateResource operation
                 }
                 finally {
@@ -102,4 +101,4 @@ println "COMPLETED"
 //        assert load.connectedClients == clientsNumber
 //        assert load.connectingClients == 0
 //        assert load.ids == clientsNumber
-//        load.stop ()
+//load.stop ()
