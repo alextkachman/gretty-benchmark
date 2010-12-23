@@ -75,8 +75,9 @@ for(i in 0..<totalIterations) {
                     }
                     else {
                         def ji = jobCount.incrementAndGet()
+                        def time = System.currentTimeMillis() - startTime
                         if(ji % 500 == 0)
-                        printStat "C$i: job completed ${ji} ${response.status} ${(System.currentTimeMillis() - startTime).intdiv(ji)} ms/op"
+                        printStat "C$i: job completed ${ji} ${response.status} ${time.intdiv(ji)} ms/op $time"
                         cdl.countDown ()
                     }
                 }
