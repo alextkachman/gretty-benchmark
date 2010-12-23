@@ -27,7 +27,7 @@ import org.mbte.gretty.httpserver.GrettyHttpRequest
 import groovypp.concurrent.ResourcePool
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
-def clientsNumber = 65000
+def clientsNumber = 60000
 
 def iterationPerClient = 10
 
