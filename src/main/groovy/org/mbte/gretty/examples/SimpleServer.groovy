@@ -24,7 +24,6 @@ GrettyServer server = [
     webContexts: [
         "/ping" : [
             default: {
-                print '.'
                 response.html = """
 <html>
     <head>
