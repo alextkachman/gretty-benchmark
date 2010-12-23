@@ -25,6 +25,7 @@ import org.jboss.netty.handler.codec.http.HttpMethod
 import org.jboss.netty.handler.codec.http.HttpVersion
 import org.mbte.gretty.httpserver.GrettyHttpRequest
 import groovypp.concurrent.ResourcePool
+import org.jboss.netty.handler.codec.http.HttpResponseStatus
 
 def clientsNumber = 5000
 
@@ -66,18 +67,20 @@ for(i in 0..<totalIterations) {
             grettyClient.request(req, load.executor) { responseBindLater ->
                 try {
                     def response = responseBindLater.get()
-                    if(!response) {
-                        printStat "C$i: null response"
+                    if(response?.status != HttpResponseStatus.OK) {
+                        printStat "C$i: response ${response?.status}"
                         load.allocateResource operation
                     }
                     else {
                         def ji = jobCount.incrementAndGet()
+                        if(ji % 500 == 0)
                         printStat "C$i: job completed ${ji} ${response.status} ${(System.currentTimeMillis() - startTime).intdiv(ji)} ms/op"
                         cdl.countDown ()
                     }
                 }
                 catch(e) {
-                    printStat "C$i: exception"
+                    printStat "C$i: $e"
+                    e.printStackTrace()
                     load.allocateResource operation
                 }
                 finally {
