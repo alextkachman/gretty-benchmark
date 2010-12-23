@@ -59,8 +59,8 @@ def jobCount = new AtomicInteger()
 def startTime = System.currentTimeMillis()
 for(i in 0..<totalIterations) {
 
-    def ownStart = System.currentTimeMillis()
     load.allocateResource { grettyClient ->
+        def ownStart = System.currentTimeMillis()
         ResourcePool.Allocate operation = this
 
         Thread.currentThread().sleep(10)
