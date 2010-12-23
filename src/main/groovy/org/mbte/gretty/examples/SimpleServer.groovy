@@ -21,7 +21,7 @@ import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisException
 
-JedisPool jedisPool = ["10.251.53.155", 6389]
+JedisPool jedisPool = ["10.251.53.155", 6379]
 
 GrettyServer server = [
     localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
