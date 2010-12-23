@@ -29,8 +29,9 @@ GrettyServer server = [
         "/ping" : [
             default: {
                 synchronized(jedis) {
-                    def var = request.parameters['grsessionid'][0]
-                    jedis.set (var, "blah-blah-blah")
+                    def var = request.parameters['grsessionid']
+                    if(var)
+                        jedis.set (var[0], "blah-blah-blah")
                 }
                 response.html = """
 <html>
