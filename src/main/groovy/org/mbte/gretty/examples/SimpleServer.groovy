@@ -19,7 +19,7 @@
 import org.mbte.gretty.httpserver.GrettyServer
 import redis.clients.jedis.Jedis
 
-Jedis jedis = ["localhost"]
+Jedis jedis = ["10.251.53.155"]
 jedis.connect()
 
 GrettyServer server = [
