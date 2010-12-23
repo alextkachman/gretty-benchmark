@@ -61,6 +61,8 @@ for(i in 0..<totalIterations) {
     load.allocateResource { grettyClient ->
         def operation = this
 
+        Thread.currentThread().sleep(10)
+
         GrettyHttpRequest req = [HttpVersion.HTTP_1_0, HttpMethod.GET, "/ping?grsessionid=$i"]
         req.setHeader HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE
         try {
