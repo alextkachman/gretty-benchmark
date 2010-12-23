@@ -58,6 +58,8 @@ def jobCount = new AtomicInteger()
 
 def startTime = System.currentTimeMillis()
 for(i in 0..<totalIterations) {
+
+    def ownStart = System.currentTimeMillis()
     load.allocateResource { grettyClient ->
         ResourcePool.Allocate operation = this
 
@@ -75,9 +77,10 @@ for(i in 0..<totalIterations) {
                     }
                     else {
                         def ji = jobCount.incrementAndGet()
-                        def time = System.currentTimeMillis() - startTime
+                        def millis = System.currentTimeMillis()
+                        def time = millis - startTime
                         if(ji % 500 == 0)
-                        printStat "C$i: job completed ${ji} ${response.status} ${time.intdiv(ji)} ms/op $time"
+                        printStat "C$i: job completed ${ji} ${response.status} ${time.intdiv(ji)} ms/op $time ${millis-ownStart}"
                         cdl.countDown ()
                     }
                 }
