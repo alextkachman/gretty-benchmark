@@ -26,6 +26,7 @@ import org.jboss.netty.handler.codec.http.HttpVersion
 import org.mbte.gretty.httpserver.GrettyHttpRequest
 import groovypp.concurrent.ResourcePool
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
+import java.lang.ref.Reference
 
 def clientsNumber = 60000
 
@@ -57,13 +58,14 @@ def printStat = { String reason ->
 def jobCount = new AtomicInteger()
 
 def startTime = System.currentTimeMillis()
-for(i in 0..<totalIterations) {
+for(i in 0..<clientsNumber) {
+//    Reference<Integer> ref = iterationPerClient
 
     load.allocateResource { grettyClient ->
         def ownStart = System.currentTimeMillis()
         ResourcePool.Allocate operation = this
 
-//        Thread.currentThread().sleep(10)
+        Thread.currentThread().sleep(1000)
 
         GrettyHttpRequest req = [HttpVersion.HTTP_1_0, HttpMethod.GET, "/ping?grsessionid=$i"]
         req.setHeader HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE
@@ -89,12 +91,12 @@ for(i in 0..<totalIterations) {
                     load.allocateResource operation
                 }
                 finally {
-                    load.releaseResource(grettyClient)
+//                    load.releaseResource(grettyClient)
                 }
             }
         }
         catch(e) {
-            load.releaseResource(grettyClient)
+//            load.releaseResource(grettyClient)
             load.allocateResource operation
         }
     }
