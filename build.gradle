@@ -30,7 +30,7 @@ dependencies {
     groovy group: 'org.mbte.groovypp', name: 'groovypp', version: "$gppVersion"
 
     compile group: 'org.mbte.groovypp', name: 'groovypp', version: "$gppVersion"
-    compile group: 'org.mbte.groovypp', name: 'gretty', version: "0.4.115"
+    compile group: 'org.mbte.groovypp', name: 'gretty', version: "0.4.116"
     runtime(group: 'commons-cli', name: 'commons-cli', version: '1.1')
 }
 
