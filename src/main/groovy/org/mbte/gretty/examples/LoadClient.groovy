@@ -27,6 +27,7 @@ import org.mbte.gretty.httpserver.GrettyHttpRequest
 import groovypp.concurrent.ResourcePool
 import org.jboss.netty.handler.codec.http.HttpResponseStatus
 import java.lang.ref.Reference
+import java.util.concurrent.Executors
 
 HttpClientPool load = [
     remoteAddress:new InetSocketAddress("my-load-balancer-680767449.us-east-1.elb.amazonaws.com", 80),
@@ -49,9 +50,12 @@ def jobCount = new AtomicInteger()
 
 def startTime = System.currentTimeMillis()
 
+def requestExecutor = Executors.newFixedThreadPool(Runtime.runtime.availableProcessors() * 10)
+
 for(i in 0..<load.clientsNumber) {
     AtomicInteger iterations = [iterationsPerClient]
     load.allocateResource { grettyClient ->
+        Thread.currentThread().sleep 10
         ResourcePool.Allocate  withClient = this
 
         if(!grettyClient.connected) {
@@ -65,7 +69,7 @@ for(i in 0..<load.clientsNumber) {
         GrettyHttpRequest req = [HttpVersion.HTTP_1_0, HttpMethod.GET, "/ping"]
         req.setHeader HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE
         try {
-            grettyClient.request(req, load.executor) { responseBindLater ->
+            grettyClient.request(req, requestExecutor) { responseBindLater ->
                 try {
                     def response = responseBindLater.get()
                     if(response?.status != HttpResponseStatus.OK) {
