@@ -65,7 +65,7 @@ Thread t = [
         run: {
             for(;;) {
                 Thread.currentThread().sleep(3000)
-                println server.ioMonitor.bytesSent
+                println "${server.ioMonitor.bytesSent} ${server.allConnected.size()}"
             }
         }
 ]

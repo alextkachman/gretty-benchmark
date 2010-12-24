@@ -55,7 +55,7 @@ def requestExecutor = Executors.newFixedThreadPool(Runtime.runtime.availableProc
 for(i in 0..<load.clientsNumber) {
     AtomicInteger iterations = [iterationsPerClient]
     load.allocateResource { grettyClient ->
-        Thread.currentThread().sleep 10
+        Thread.currentThread().sleep 1000
         ResourcePool.Allocate  withClient = this
 
         if(!grettyClient.connected) {
