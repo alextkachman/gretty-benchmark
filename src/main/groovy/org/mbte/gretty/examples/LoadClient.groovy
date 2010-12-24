@@ -88,7 +88,7 @@ for(i in 0..<load.clientsNumber) {
                         cdl.countDown ()
 
                         if(iterations.decrementAndGet() > 0) {
-                            load.executor.execute {
+                            requestExecutor.execute {
                                 withClient(grettyClient)
                             }
                         }
