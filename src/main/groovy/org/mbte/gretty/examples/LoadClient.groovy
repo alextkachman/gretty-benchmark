@@ -31,12 +31,13 @@ import java.lang.ref.Reference
 HttpClientPool load = [
     remoteAddress:new InetSocketAddress("my-load-balancer-680767449.us-east-1.elb.amazonaws.com", 80),
 
-    maxClientsConnectingConcurrently: 10,
+    maxClientsConnectingConcurrently: 1000,
 
-    clientsNumber: 100
+    clientsNumber: 60000
 ]
 
-def cdl = new CountDownLatch(100*10)
+def iterationsPerClient = 10
+def cdl = new CountDownLatch(load.clientsNumber*iterationsPerClient)
 
 def printStat = { String reason ->
     synchronized(cdl) { // does not really matter on what to sync
@@ -44,8 +45,8 @@ def printStat = { String reason ->
     }
 }
 
-for(i in 0..<100) {
-    AtomicInteger iterations = [10]
+for(i in 0..<load.clientsNumber) {
+    AtomicInteger iterations = [iterationsPerClient]
     load.allocateResource { grettyClient ->
         ResourcePool.Allocate  withClient = this
 
