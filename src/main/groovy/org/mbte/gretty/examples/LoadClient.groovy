@@ -62,10 +62,15 @@ for(i in 0..<clientsNumber) {
 //    Reference<Integer> ref = iterationPerClient
 
     load.allocateResource { grettyClient ->
-        def ownStart = System.currentTimeMillis()
-        ResourcePool.Allocate operation = this
+        ResourcePool.Allocate  withClient = this
 
-        Thread.currentThread().sleep(1000)
+        if(!grettyClient.connected) {
+            load.releaseResource grettyClient
+            load.allocateResource withClient
+            return
+        }
+
+        def ownStart = System.currentTimeMillis()
 
         GrettyHttpRequest req = [HttpVersion.HTTP_1_0, HttpMethod.GET, "/ping?grsessionid=$i"]
         req.setHeader HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE
@@ -75,7 +80,6 @@ for(i in 0..<clientsNumber) {
                     def response = responseBindLater.get()
                     if(response?.status != HttpResponseStatus.OK) {
                         printStat "C$i: response ${response?.status}"
-                        load.allocateResource operation
                     }
                     else {
                         def ji = jobCount.incrementAndGet()
@@ -85,19 +89,23 @@ for(i in 0..<clientsNumber) {
                         printStat "C$i: job completed ${ji} ${response.status} ${time.intdiv(ji)} ms/op $time ${millis-ownStart}"
                         cdl.countDown ()
                     }
+
+                    load.executor.execute {
+                        withClient(grettyClient)
+                    }
                 }
                 catch(e) {
                     printStat "C$i: $e"
-                    load.allocateResource operation
-                }
-                finally {
-//                    load.releaseResource(grettyClient)
+                    // we need to retry with new client
+                    load.releaseResource grettyClient
+                    load.allocateResource withClient
                 }
             }
         }
         catch(e) {
-//            load.releaseResource(grettyClient)
-            load.allocateResource operation
+            // we need to retry with new client
+            load.releaseResource grettyClient
+            load.allocateResource withClient
         }
     }
 }
