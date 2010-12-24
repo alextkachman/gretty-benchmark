@@ -92,6 +92,7 @@ for(i in 0..<load.clientsNumber) {
                             printStat "C$i: job completed"
                             // we don't disconnect channel here with purpose
                             // otherwise new one will appear in the pool
+                            grettyClient.disconnect()
                         }
                     }
                 }
