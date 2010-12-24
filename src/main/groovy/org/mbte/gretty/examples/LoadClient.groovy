@@ -66,7 +66,7 @@ for(i in 0..<load.clientsNumber) {
 
         def ownStart = System.currentTimeMillis()
 
-        GrettyHttpRequest req = [HttpVersion.HTTP_1_0, HttpMethod.GET, "/ping"]
+        GrettyHttpRequest req = [HttpVersion.HTTP_1_0, HttpMethod.GET, "/ping?grsessionid=$i"]
         req.setHeader HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE
         try {
             grettyClient.request(req, requestExecutor) { responseBindLater ->
