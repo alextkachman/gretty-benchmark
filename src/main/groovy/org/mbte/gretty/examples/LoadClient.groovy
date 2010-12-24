@@ -45,6 +45,10 @@ def printStat = { String reason ->
     }
 }
 
+def jobCount = new AtomicInteger()
+
+def startTime = System.currentTimeMillis()
+
 for(i in 0..<load.clientsNumber) {
     AtomicInteger iterations = [iterationsPerClient]
     load.allocateResource { grettyClient ->
@@ -55,6 +59,8 @@ for(i in 0..<load.clientsNumber) {
             load.allocateResource withClient
             return
         }
+
+        def ownStart = System.currentTimeMillis()
 
         GrettyHttpRequest req = [HttpVersion.HTTP_1_0, HttpMethod.GET, "/ping"]
         req.setHeader HttpHeaders.Names.CONNECTION, HttpHeaders.Values.KEEP_ALIVE
@@ -70,7 +76,11 @@ for(i in 0..<load.clientsNumber) {
                         }
                     }
                     else {
-                        printStat "C$i: iteration ${iterations.get()} completed ${response.status}"
+                        def ji = jobCount.incrementAndGet()
+                        def millis = System.currentTimeMillis()
+                        def time = millis - startTime
+//                        if(ji % 50 == 0)
+                        printStat "C$i: iteration ${iterations.get()} completed ${response.status} ${time.intdiv(ji)} ms/op $time ${millis-ownStart}"
                         cdl.countDown ()
 
                         if(iterations.decrementAndGet() > 0) {
