@@ -35,7 +35,7 @@ HttpClientPool load = [
 
     maxClientsConnectingConcurrently: 1000,
 
-    clientsNumber: 5000
+    clientsNumber: 100
 ]
 
 def iterationsPerClient = 10
