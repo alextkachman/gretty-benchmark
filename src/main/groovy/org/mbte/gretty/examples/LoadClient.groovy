@@ -31,7 +31,7 @@ import java.util.concurrent.Executors
 
 HttpClientPool load = [
     remoteAddress:new InetSocketAddress("my-load-balancer-680767449.us-east-1.elb.amazonaws.com", 80),
-    localAddress:new InetSocketAddress("10.0.0.1", 0),
+//    localAddress:new InetSocketAddress("10.0.0.1", 0),
 
     maxClientsConnectingConcurrently: 1000,
 
