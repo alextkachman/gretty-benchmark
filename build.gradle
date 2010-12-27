@@ -74,14 +74,26 @@ task env(dependsOn:'classes') {
 
     def startRole = { String r ->
         println "Starting role '$r'"
-        def cmd = "/usr/bin/java -cp $classpath -server -Xmx4096m -Xms4096m org.mbte.gretty.examples.SimpleServer".toString()
-        println cmd
-        def process = cmd.execute()
-        process.consumeProcessOutputStream(System.out)
-        process.consumeProcessErrorStream(System.err)
+        switch(r) {
+            case 'server':
+                def cmd = "/usr/bin/java -cp $classpath -server -Xmx4096m -Xms4096m org.mbte.gretty.examples.SimpleServer".toString()
+                activeProcess = cmd.execute()
+            break
+
+            case 'redis':
+                def cmd = "../redis-2.0.4/redis-server redis.conf".toString()
+                activeProcess = cmd.execute()
+            break
+        }
+
+        activeProcess?.consumeProcessOutputStream(System.out)
+        activeProcess?.consumeProcessErrorStream(System.err)
     }
 
     def stopRole = { String r ->
+        activeProcess?.destroy()
+        activeProcess = null
+
         if(r) {
             println "Stopping role '$r'"
         }
