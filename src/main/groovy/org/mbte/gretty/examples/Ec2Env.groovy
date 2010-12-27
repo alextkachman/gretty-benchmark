@@ -63,9 +63,10 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
                         myRole = 'server'
                     }
 
+                    myRole = myRole.toLowerCase()
                     if(myRole != role) {
                         stopRole(role)
-                        role = myRole.toLowerCase()
+                        role = myRole
                         startRole(role)
                     }
 
