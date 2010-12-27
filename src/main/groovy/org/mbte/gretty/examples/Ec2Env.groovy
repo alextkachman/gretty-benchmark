@@ -34,11 +34,15 @@ import com.amazonaws.services.ec2.AmazonEC2AsyncClient
 
         Thread t = [
             run: {
+                def ip = InetAddress.localHost.hostAddress
+
                 for(;;) {
                     def instances = awsClient.describeInstances()
                     for(r in instances.reservations)
-                        for(i in r.instances)
-                          println "$i.privateIpAddress $i.tags"
+                        for(i in r.instances) {
+                          if(ip == i.privateIpAddress)
+                            println "I am $i.privateIpAddress $i.tags"
+                        }
 
                     Thread.sleep 15000
                 }
