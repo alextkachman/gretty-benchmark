@@ -47,6 +47,12 @@ task load(type:JavaExec, dependsOn:'classes') {
     jvmArgs = ['-server',  '-Xms4096m', '-Xmx4096m']
 }
 
+task env(type:JavaExec, dependsOn:'classes') {
+    main = 'org.mbte.gretty.examples.Ec2Env'
+    classpath =  sourceSets.main.runtimeClasspath
+    jvmArgs = ['-server',  '-Xms4096m', '-Xmx4096m']
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '0.9-rc-3'
 }
