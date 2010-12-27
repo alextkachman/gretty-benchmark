@@ -38,7 +38,8 @@ import com.amazonaws.services.ec2.AmazonEC2AsyncClient
                     def instances = awsClient.describeInstances()
                     for(r in instances.reservations)
                         for(i in r.instances)
-                            println i.tags
+                            if(i.tags)
+                                println i.tags
 
                     Thread.sleep 15000
                 }
