@@ -85,8 +85,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
             break
 
             case 'redis':
-                redis = "../redis-2.0.4/redis-server".execute()
-                redis.consumeProcessErrorStream(System.err)
+                redis = new ProcessBuilder().command('../redis-2.0.4/redis-server', 'redis.conf').redirectErrorStream(true).start()
                 redis.consumeProcessOutputStream(System.out)
             break
         }
