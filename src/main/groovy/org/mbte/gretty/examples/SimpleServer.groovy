@@ -21,12 +21,38 @@ import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisException
 
+Ec2Env.configure()
+
 JedisPool jedisPool = ["10.251.53.155", 6379]
 
 GrettyServer server = [
     localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
 
     webContexts: [
+        "/admin" : [
+                staticResources: '/',
+
+                public: {
+                    post ("/notify.git.commit") {
+                        println request.content.asString()
+                    }
+
+                    websocket("/ws",[
+                        onMessage: { msg ->
+                            switch(msg) {
+                                case 'get_stat':
+                                    socket.send "INIT_SCREEN"
+                                break
+
+                                default:
+                                    socket.send "UNKNOWN COMMAND:\n$msg"
+                                break
+                            }
+                        },
+                    ])
+                }
+        ],
+
         "/ping" : [
             default: {
                 def var = request.parameters['grsessionid']
@@ -59,6 +85,14 @@ GrettyServer server = [
         ]
     ]
 ]
+
+addShutdownHook {
+    println "Stopping..."
+    server.allConnected.close()
+    server.stop()
+}
+
+
 server.start ()
 
 Thread t = [
