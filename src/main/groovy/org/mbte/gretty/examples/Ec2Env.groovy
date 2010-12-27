@@ -84,7 +84,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
             break
 
             case 'redis':
-                redis = "../redis*/redis-server"
+                redis = "../redis*/redis-server".execute()
             break
         }
     }
