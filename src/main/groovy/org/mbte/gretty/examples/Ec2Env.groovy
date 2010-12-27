@@ -84,7 +84,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
             break
 
             case 'redis':
-                DefaultGroovyMethods
+                redis = "../redis*/redis-server"
             break
         }
     }
@@ -100,6 +100,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
             case 'redis':
                 redis.destroy()
+                redis = null
             break
         }
     }
