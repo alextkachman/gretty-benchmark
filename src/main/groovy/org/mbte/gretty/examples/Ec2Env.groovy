@@ -60,7 +60,7 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
                     }
 
                     if(myRole == '') {
-                        myRole == 'server'
+                        myRole = 'server'
                     }
 
                     if(myRole != role) {
@@ -90,6 +90,9 @@ import org.codehaus.groovy.runtime.DefaultGroovyMethods
     }
 
     static void stopRole (String role) {
+        if(!role)
+            return
+
         println "Stopping role '$role'"
         switch(role) {
             case 'server':
