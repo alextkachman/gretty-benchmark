@@ -35,13 +35,6 @@ dependencies {
     runtime(group: 'commons-cli', name: 'commons-cli', version: '1.1')
 }
 
-
-task pull(type:Exec) {
-    commandLine(["git", "pull"])
-}
-
-compileJava.dependsOn << pull
-
 task run(type:JavaExec, dependsOn:'classes') {
     main = 'org.mbte.gretty.examples.SimpleServer'
     classpath =  sourceSets.main.runtimeClasspath
