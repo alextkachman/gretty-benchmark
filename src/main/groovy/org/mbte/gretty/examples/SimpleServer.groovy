@@ -33,10 +33,6 @@ GrettyServer server = [
                 staticResources: '/',
 
                 public: {
-                    post ("/notify.git.commit") {
-                        println request.content.asString()
-                    }
-
                     websocket("/ws",[
                         onMessage: { msg ->
                             switch(msg) {
