@@ -33,6 +33,9 @@ GrettyServer server = [
                 staticResources: '/',
 
                 public: {
+                    get('/restart') {
+                        System.exit(0)
+                    }
                     websocket("/ws",[
                         onMessage: { msg ->
                             switch(msg) {

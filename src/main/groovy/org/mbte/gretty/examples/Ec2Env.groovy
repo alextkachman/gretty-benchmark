@@ -23,7 +23,9 @@ import com.amazonaws.services.ec2.AmazonEC2AsyncClient
     static PropertiesCredentials awsCredentials
     static AmazonEC2AsyncClient  awsClient
 
-    static void configure () {
+    static String role
+
+    static void main (String [] args) {
         File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
         if(!credentialsFile.exists()) {
             throw new IOException(credentialsFile.absolutePath)
@@ -38,16 +40,42 @@ import com.amazonaws.services.ec2.AmazonEC2AsyncClient
 
                 for(;;) {
                     def instances = awsClient.describeInstances()
-                    for(r in instances.reservations)
+                    def myRole = ''
+                    for(r in instances.reservations) {
                         for(i in r.instances) {
-                          if(ip == i.privateIpAddress)
-                            println "I am $i.privateIpAddress $i.tags"
+                          if(ip == i.privateIpAddress) {
+                              println "I am $i.privateIpAddress $i.tags"
+                              for(t in i.tags) {
+                                  if(t.key.equalsIgnoreCase('role')) {
+                                      myRole = t.value
+                                  }
+                              }
+                          }
                         }
+                    }
+
+                    if(myRole == '') {
+                        myRole == 'server'
+                    }
+
+                    if(myRole != role) {
+                        stopRole(role)
+                        role = myRole
+                        startRole(role)
+                    }
 
                     Thread.sleep 15000
                 }
             }
         ]
         t.start()
+    }
+
+    static void startRole (String role) {
+        println "Starting role '$role'"
+    }
+
+    static void stopRole (String role) {
+        println "Stopping role '$role'"
     }
 }
