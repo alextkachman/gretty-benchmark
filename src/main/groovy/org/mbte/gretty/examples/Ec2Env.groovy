@@ -18,12 +18,17 @@ package org.mbte.gretty.examples
 
 import com.amazonaws.auth.PropertiesCredentials
 import com.amazonaws.services.ec2.AmazonEC2AsyncClient
+import org.codehaus.groovy.runtime.DefaultGroovyMethods
 
 @Typed class Ec2Env {
     static PropertiesCredentials awsCredentials
     static AmazonEC2AsyncClient  awsClient
 
     static String role
+
+    static SimpleServer server
+
+    static Process redis
 
     static void main (String [] args) {
         File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
@@ -60,7 +65,7 @@ import com.amazonaws.services.ec2.AmazonEC2AsyncClient
 
                     if(myRole != role) {
                         stopRole(role)
-                        role = myRole
+                        role = myRole.toLowerCase()
                         startRole(role)
                     }
 
@@ -73,9 +78,26 @@ import com.amazonaws.services.ec2.AmazonEC2AsyncClient
 
     static void startRole (String role) {
         println "Starting role '$role'"
+        switch(role) {
+            case 'server':
+                new SimpleServer().run()
+            break
+
+            case 'redis':
+                DefaultGroovyMethods
+            break
+        }
     }
 
     static void stopRole (String role) {
         println "Stopping role '$role'"
+        switch(role) {
+            case 'server':
+            break
+
+            case 'redis':
+                redis.destroy()
+            break
+        }
     }
 }
