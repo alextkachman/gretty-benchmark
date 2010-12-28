@@ -18,12 +18,15 @@ package org.mbte.gretty.examples
 
 import com.amazonaws.services.ec2.AmazonEC2Client
 import com.amazonaws.auth.PropertiesCredentials
+import com.amazonaws.services.ec2.model.Instance
 
 @Typed class Ec2Env {
-    PropertiesCredentials awsCredentials
-    AmazonEC2Client awsClient
+    private PropertiesCredentials awsCredentials
+    private AmazonEC2Client awsClient
 
-    String myIp = InetAddress.localHost.hostAddress
+    private String myIp = InetAddress.localHost.hostAddress
+
+    private HashMap<String,Instance> myInstances = [:]
 
     Ec2Env () {
         File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
@@ -42,38 +45,60 @@ import com.amazonaws.auth.PropertiesCredentials
                 for(;;) {
                     def instances = awsClient.describeInstances()
 
-                    if(!myGroup) {
-                        for(r in instances.reservations) {
-                            for(i in r.instances) {
-                              if(myIp == i.privateIpAddress) {
-                                  myGroup = r.groupNames [0]
-                                  break
-                              }
+                    synchronized(this) {
+                        if(!myGroup) {
+                            for(r in instances.reservations) {
+                                for(i in r.instances) {
+                                  if(myIp == i.privateIpAddress) {
+                                      myGroup = r.groupNames [0]
+                                      break
+                                  }
+                                }
                             }
                         }
-                    }
 
-                    for(r in instances.reservations) {
-                        if(r.groupNames[0] == myGroup) {
-                            for(i in r.instances) {
-                              if(myIp == i.privateIpAddress) {
-                                  println "I am $i.privateIpAddress $i.tags"
-                              }
-                              else {
-                                  for(t in i.tags) {
-                                      if(t.key.equalsIgnoreCase('role') && t.value.equalsIgnoreCase('redis')) {
-//                                          myRedis = i.privateIpAddress
+                        Map<String,Instance> insts = [:]
+
+                        Set<Instance> newi = []
+                        for(r in instances.reservations) {
+                            if(!myGroup || r.groupNames[0] == myGroup) {
+                                for(i in r.instances) {
+                                  if(myIp == i.privateIpAddress) {
+                                      println "I am $i.privateIpAddress $i.tags"
+                                  }
+                                  else {
+                                      insts[i.instanceId] = i
+                                      if(!myInstances.containsKey(i.instanceId)) {
+                                          newi << i
+                                          myInstances[i.instanceId] = i
+                                          println "New instance $i.privateIpAddress $i.tags"
                                       }
                                   }
-                              }
+                                }
                             }
                         }
-                    }
 
+                        Set<String> gone = []
+                        for(ii in myInstances.entrySet()) {
+                            if(!insts.containsKey(ii.key)) {
+                                gone << ii.key
+                                println "Instance has gone $ii.value.privateIpAddress $ii.value.tags"
+                            }
+                        }
+                        for(g in gone) {
+                            myInstances.remove(g)
+                        }
+                    }
                     Thread.currentThread().sleep(15000)
                 }
             }
         ]
         t.start()
+    }
+
+    Map<String,Instance> getInstances () {
+        synchronized(this) {
+            return myInstances.clone()
+        }
     }
 }
