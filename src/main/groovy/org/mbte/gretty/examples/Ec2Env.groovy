@@ -58,16 +58,11 @@ import com.amazonaws.auth.PropertiesCredentials
                             for(i in r.instances) {
                               if(myIp == i.privateIpAddress) {
                                   println "I am $i.privateIpAddress $i.tags"
-                                  for(t in i.tags) {
-                                      if(t.key.equalsIgnoreCase('role')) {
-                                          myRole = t.value
-                                      }
-                                  }
                               }
                               else {
                                   for(t in i.tags) {
                                       if(t.key.equalsIgnoreCase('role') && t.value.equalsIgnoreCase('redis')) {
-                                          myRedis = i.privateIpAddress
+//                                          myRedis = i.privateIpAddress
                                       }
                                   }
                               }
