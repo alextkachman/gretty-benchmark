@@ -61,6 +61,9 @@ task createLaunchScript << {
 
     new File('server').text = "/usr/bin/java -cp $classpath $jvmArgs org.mbte.gretty.examples.SimpleServer"
     Runtime.runtime.exec "chmod +x server"
+
+    new File('loader').text = "/usr/bin/java -cp $classpath $jvmArgs org.mbte.gretty.examples.LoadClient"
+    Runtime.runtime.exec "chmod +x loader"
 }
 
 build.dependsOn << createLaunchScript

@@ -20,6 +20,7 @@ import org.mbte.gretty.httpserver.GrettyServer
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisException
+import org.codehaus.jackson.map.ObjectMapper
 
 JedisPool jedisPool = ["10.251.53.155", 6379]
 
@@ -41,6 +42,8 @@ GrettyServer server = [
                         onMessage: { msg ->
                             switch(msg) {
                                 case 'get_stat':
+                                    ObjectMapper mapper = []
+                                    mapper.
                                     socket.send "INIT_SCREEN"
                                 break
 
