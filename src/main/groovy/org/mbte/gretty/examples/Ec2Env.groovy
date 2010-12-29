@@ -30,9 +30,9 @@ import com.amazonaws.services.ec2.model.Instance
 
     Ec2Env () {
         File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
-        if(!credentialsFile.exists()) {
+        if(!credentialsFile.exists() || !credentialsFile.canRead()) {
             credentialsFile = ['../.aws/credentials']
-            if(!credentialsFile.exists()) {
+            if(!credentialsFile.exists() || !credentialsFile.canRead()) {
                 throw new IOException(credentialsFile.absolutePath)
             }
         }
