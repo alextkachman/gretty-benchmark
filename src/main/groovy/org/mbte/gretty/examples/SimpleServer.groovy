@@ -60,11 +60,13 @@ class SimpleServer {
 
         switch (role) {
             case 'redis':
+                println 'Starting Redis...'
                 Runtime.runtime.exec ("../redis-2.0.4/redis-server redis.conf")
                 System.exit(0)
             break
 
             default:
+                println 'Starting Server...'
                 startServer ()
             break
         }
