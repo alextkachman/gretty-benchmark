@@ -29,7 +29,7 @@ import com.amazonaws.services.ec2.model.Instance
     private HashMap<String,Instance> myInstances = [:]
 
     Ec2Env () {
-        File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
+        File credentialsFile = ['../.aws/credentials']
         if(!credentialsFile.exists()) {
             throw new IOException(credentialsFile.absolutePath)
         }
