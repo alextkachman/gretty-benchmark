@@ -19,14 +19,17 @@ package org.mbte.gretty.examples
 import com.amazonaws.services.ec2.AmazonEC2Client
 import com.amazonaws.auth.PropertiesCredentials
 import com.amazonaws.services.ec2.model.Instance
+import com.amazonaws.services.ec2.model.DescribeInstancesResult
 
 @Typed class Ec2Env {
     private PropertiesCredentials awsCredentials
     private AmazonEC2Client awsClient
 
-    private String myIp = InetAddress.localHost.hostAddress
+    protected String myIp = InetAddress.localHost.hostAddress
 
-    private HashMap<String,Instance> myInstances = [:]
+    protected HashMap<String,Instance> myInstances = [:]
+
+    Instance myInstance
 
     Ec2Env () {
         File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
@@ -39,9 +42,25 @@ import com.amazonaws.services.ec2.model.Instance
 
         awsCredentials = [credentialsFile]
         awsClient = [awsCredentials]
+
+        def instances = awsClient.describeInstances()
+        initCluster(instances)
+
+        startClusterMonitoring()
     }
 
-    void start () {
+    protected void initCluster(DescribeInstancesResult instances) {
+        for (r in instances.reservations) {
+            for (i in r.instances) {
+                if (myIp == i.privateIpAddress) {
+                    myInstance = i
+                    break
+                }
+            }
+        }
+    }
+
+    protected void startClusterMonitoring () {
         Thread t = [
             run: {
                 String myGroup
@@ -49,17 +68,6 @@ import com.amazonaws.services.ec2.model.Instance
                     def instances = awsClient.describeInstances()
 
                     synchronized(this) {
-                        if(!myGroup) {
-                            for(r in instances.reservations) {
-                                for(i in r.instances) {
-                                  if(myIp == i.privateIpAddress) {
-                                      myGroup = r.groupNames [0]
-                                      break
-                                  }
-                                }
-                            }
-                        }
-
                         Map<String,Instance> insts = [:]
 
                         Set<Instance> newi = []
@@ -67,14 +75,20 @@ import com.amazonaws.services.ec2.model.Instance
                             if(!myGroup || r.groupNames[0] == myGroup) {
                                 for(i in r.instances) {
                                   if(myIp == i.privateIpAddress) {
-                                      println "I am $i.privateIpAddress $i.tags"
+                                      def old = myInstance
+                                      myInstance = i
+                                      onOwnInfoUpdate i, old
                                   }
                                   else {
                                       insts[i.instanceId] = i
-                                      if(!myInstances.containsKey(i.instanceId)) {
+                                      def old = myInstances[i.instanceId]
+                                      myInstances[i.instanceId] = i
+                                      if(!old) {
                                           newi << i
-                                          myInstances[i.instanceId] = i
-                                          println "New instance $i.privateIpAddress $i.tags"
+                                          onInstanceAppear i
+                                      }
+                                      else {
+                                          onInstanceUpdate i, old
                                       }
                                   }
                                 }
@@ -85,11 +99,10 @@ import com.amazonaws.services.ec2.model.Instance
                         for(ii in myInstances.entrySet()) {
                             if(!insts.containsKey(ii.key)) {
                                 gone << ii.key
-                                println "Instance has gone $ii.value.privateIpAddress $ii.value.tags"
                             }
                         }
                         for(g in gone) {
-                            myInstances.remove(g)
+                            onInstanceDisappear myInstances.remove(g)
                         }
                     }
                     Thread.currentThread().sleep(15000)
@@ -97,6 +110,42 @@ import com.amazonaws.services.ec2.model.Instance
             }
         ]
         t.start()
+    }
+
+    static class Listener {
+        protected void onOwnInfoUpdate(Instance currentInstance, Instance oldInstance) {
+        }
+
+        protected void onInstanceUpdate(Instance currentInstance, Instance oldInstance) {
+        }
+
+        protected void onInstanceAppear(Instance currentInstance) {
+        }
+
+        protected void onInstanceDisappear(Instance oldInstance) {
+        }
+    }
+
+    private final List<Listener> listeners = []
+
+    protected void onOwnInfoUpdate(Instance currentInstance, Instance oldInstance) {
+        for(l in listeners)
+            l.onOwnInfoUpdate currentInstance, oldInstance
+    }
+
+    protected void onInstanceUpdate(Instance currentInstance, Instance oldInstance) {
+        for(l in listeners)
+            l.onInstanceUpdate currentInstance, oldInstance
+    }
+
+    protected void onInstanceAppear(Instance currentInstance) {
+        for(l in listeners)
+            l.onInstanceAppear currentInstance
+    }
+
+    protected void onInstanceDisappear(Instance oldInstance) {
+        for(l in listeners)
+            l.onInstanceDisappear oldInstance
     }
 
     Map<String,Instance> getInstances () {

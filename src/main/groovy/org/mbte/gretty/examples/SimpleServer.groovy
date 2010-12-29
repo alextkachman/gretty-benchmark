@@ -20,91 +20,142 @@ import org.mbte.gretty.httpserver.GrettyServer
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisException
-import org.codehaus.jackson.map.ObjectMapper
 
-JedisPool jedisPool = ["10.251.53.155", 6379]
+class SimpleServer {
 
-Ec2Env ec2 = []
-ec2.start()
+    JedisPool jedisPool = ["10.251.53.155", 6379]
 
-GrettyServer server = [
-    localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
+    Ec2Env ec2
 
-    webContexts: [
-        "/admin" : [
-                staticResources: '/',
+    GrettyServer server
 
-                public: {
-                    get('/restart') {
-                        System.exit(0)
+    SimpleServer () {
+        ec2 = []
+
+        if(!ec2.myInstance) {
+            println("Running outside AWS")
+            startServer()
+        }
+        else {
+            println("Running on AWS")
+            startAccordingToTags ()
+        }
+    }
+
+    protected void startAccordingToTags () {
+        String role = System.getProperty('cluster.role')
+        if(!role) {
+            for(t in ec2.myInstance.tags) {
+                if(t.key.equalsIgnoreCase("role")) {
+                    role = t.value
+                }
+            }
+        }
+
+        role = role?.toLowerCase()
+        if(!role) {
+            println 'Role tag does not defined'
+            System.exit(0)
+        }
+
+        switch (role) {
+            case 'redis':
+                Runtime.runtime.exec ("../redis-2.0.4/redis-server redis.conf")
+                System.exit(0)
+            break
+
+            default:
+                startServer ()
+            break
+        }
+    }
+
+    private GrettyServer startServer() {
+        server = [
+            localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
+
+            webContexts: [
+                "/admin": [
+                    staticResources: '/',
+
+                    public: {
+                        get('/restart') {
+                            System.exit(0)
+                        }
+                        websocket("/ws", [
+                            onMessage: { msg ->
+                                switch (msg) {
+                                    case 'get_stat':
+                                        socket.send "INIT_SCREEN"
+                                        break
+
+                                    default:
+                                        socket.send "UNKNOWN COMMAND:\n$msg"
+                                        break
+                                }
+                            },
+                        ])
                     }
-                    websocket("/ws",[
-                        onMessage: { msg ->
-                            switch(msg) {
-                                case 'get_stat':
-                                    socket.send "INIT_SCREEN"
-                                break
+                ],
 
-                                default:
-                                    socket.send "UNKNOWN COMMAND:\n$msg"
-                                break
+                "/ping": [
+                    default: {
+                        def var = request.parameters['grsessionid']
+                        if (var) {
+                            Jedis jedis
+                            try {
+                                jedis = jedisPool.getResource()
+                                jedis.set(var[0], "blah-blah-blah")
                             }
-                        },
-                    ])
-                }
-        ],
+                            catch (JedisException e) {
+                                if (jedis)
+                                    jedisPool.returnBrokenResource jedis
+                                e.printStackTrace()
+                                throw e
+                            }
+                            jedisPool.returnResource jedis
+                        }
 
-        "/ping" : [
-            default: {
-                def var = request.parameters['grsessionid']
-                if(var) {
-                    Jedis jedis
-                    try {
-                        jedis = jedisPool.getResource()
-                        jedis.set (var[0], "blah-blah-blah")
-                    }
-                    catch(JedisException e) {
-                        if(jedis)
-                            jedisPool.returnBrokenResource jedis
-                        e.printStackTrace()
-                        throw e
-                    }
-                    jedisPool.returnResource jedis
-                }
-
-                response.html = """
-<html>
+                        response.html = """
+    <html>
     <head>
         <title>Ping page</title>
     </head>
     <body>
         Hello, World!
     </body>
-</html>
+    </html>
                 """
+                    }
+                ]
+            ]
+        ]
+
+        server.start ()
+
+
+        addShutdownHook {
+            println "Stopping..."
+            server.allConnected.close()
+            server.stop()
+        }
+
+
+        Thread t = [
+            run: {
+                for(;;) {
+                    Thread.currentThread().sleep(3000)
+                    println "${server.ioMonitor.bytesSent} ${server.allConnected.size()}"
+                }
             }
         ]
-    ]
-]
+        t.start()
 
-addShutdownHook {
-    println "Stopping..."
-    server.allConnected.close()
-    server.stop()
+        println server.localAddress
+        println 'Started...'
+    }
+
+    static void main(String [] args) {
+        new SimpleServer()
+    }
 }
-
-
-server.start ()
-
-Thread t = [
-        run: {
-            for(;;) {
-                Thread.currentThread().sleep(3000)
-                println "${server.ioMonitor.bytesSent} ${server.allConnected.size()}"
-            }
-        }
-]
-t.start()
-
-println server.localAddress
-println 'Started...'
