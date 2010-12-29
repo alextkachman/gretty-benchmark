@@ -42,8 +42,6 @@ GrettyServer server = [
                         onMessage: { msg ->
                             switch(msg) {
                                 case 'get_stat':
-                                    ObjectMapper mapper = []
-                                    mapper.
                                     socket.send "INIT_SCREEN"
                                 break
 
