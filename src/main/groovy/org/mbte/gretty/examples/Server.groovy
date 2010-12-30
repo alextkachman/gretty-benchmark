@@ -14,65 +14,23 @@
  * limitations under the License.
  */
 
-@Typed package org.mbte.gretty.examples
+package org.mbte.gretty.examples
 
 import org.mbte.gretty.httpserver.GrettyServer
-import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisException
+import redis.clients.jedis.Jedis
+import groovypp.channels.SupervisedChannel
+import groovypp.channels.LoopChannel
 
-class SimpleServer {
-
+@Typed class Server extends SupervisedChannel {
     JedisPool jedisPool = ["10.251.53.155", 6379]
 
-    Ec2Env ec2
+    String redisHost
 
-    GrettyServer server
+    private GrettyServer server
 
-    SimpleServer () {
-        ec2 = []
-
-        if(!ec2.myInstance) {
-            println("Running outside AWS")
-            startServer()
-        }
-        else {
-            println("Running on AWS")
-            startAccordingToTags ()
-        }
-    }
-
-    protected void startAccordingToTags () {
-        String role = System.getProperty('cluster.role')
-        if(!role) {
-            for(t in ec2.myInstance.tags) {
-                if(t.key.equalsIgnoreCase("role")) {
-                    role = t.value
-                }
-            }
-        }
-
-        role = role?.toLowerCase()
-        if(!role) {
-            println 'Role tag does not defined'
-            System.exit(0)
-        }
-
-        switch (role) {
-            case 'redis':
-                println 'Starting Redis...'
-                Runtime.runtime.exec ("../redis-2.0.4/redis-server redis.conf")
-                System.exit(0)
-            break
-
-            default:
-                println 'Starting Server...'
-                startServer ()
-            break
-        }
-    }
-
-    private GrettyServer startServer() {
+    Server () {
         server = [
             localAddress: new InetSocketAddress(InetAddress.localHost.hostName, 8080),
 
@@ -118,23 +76,24 @@ class SimpleServer {
                             jedisPool.returnResource jedis
                         }
 
-                        response.html = """
-    <html>
-    <head>
-        <title>Ping page</title>
-    </head>
-    <body>
-        Hello, World!
-    </body>
-    </html>
-                """
+                        response.html = """\
+<html>
+<head>
+    <title>Ping page</title>
+</head>
+<body>
+    Hello, World!
+</body>
+</html>
+"""
                     }
                 ]
             ]
         ]
+    }
 
+    protected void doStartup() {
         server.start ()
-
 
         addShutdownHook {
             println "Stopping..."
@@ -142,22 +101,14 @@ class SimpleServer {
             server.stop()
         }
 
-
-        Thread t = [
-            run: {
-                for(;;) {
-                    Thread.currentThread().sleep(3000)
-                    println "${server.ioMonitor.bytesSent} ${server.allConnected.size()}"
-                }
-            }
-        ]
-        t.start()
-
-        println server.localAddress
-        println 'Started...'
-    }
-
-    static void main(String [] args) {
-        new SimpleServer()
+        LoopChannel monitor = {
+            println "${server.ioMonitor.bytesSent} ${server.allConnected.size()}"
+            Thread.currentThread().sleep(3000)
+            true
+        }
+        startupChild(monitor) {
+            println server.localAddress
+            println 'Started...'
+        }
     }
 }

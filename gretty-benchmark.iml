@@ -19,11 +19,11 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/groovypp/jars/groovypp-0.4.113.jar!/" />
+          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/groovypp/jars/groovypp-0.4.115.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/groovypp/sources/groovypp-0.4.113-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/groovypp/sources/groovypp-0.4.115-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>
@@ -106,11 +106,11 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/gretty/jars/gretty-0.4.118.jar!/" />
+          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/gretty/jars/gretty-0.4.121.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/gretty/sources/gretty-0.4.118-sources.jar!/" />
+          <root url="jar://$USER_HOME$/.gradle/cache/org.mbte.groovypp/gretty/sources/gretty-0.4.121-sources.jar!/" />
         </SOURCES>
       </library>
     </orderEntry>

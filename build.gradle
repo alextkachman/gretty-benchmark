@@ -17,7 +17,7 @@
 apply plugin: 'groovy'
 apply plugin: 'idea'
 
-gppVersion = "0.4.113"
+gppVersion = "0.4.115"
 
 repositories {
   mavenRepo urls: 'http://groovypp.artifactoryonline.com/groovypp/libs-releases-local/'
@@ -30,14 +30,14 @@ dependencies {
     groovy group: 'org.mbte.groovypp', name: 'groovypp', version: "$gppVersion"
 
     compile group: 'org.mbte.groovypp', name: 'groovypp', version: "$gppVersion"
-    compile group: 'org.mbte.groovypp', name: 'gretty', version: "0.4.118"
+    compile group: 'org.mbte.groovypp', name: 'gretty', version: "0.4.121"
     compile group: 'com.amazonaws', name: 'aws-java-sdk', version: "1.1.0"
     runtime(group: 'commons-cli', name: 'commons-cli', version: '1.1')
 
 }
 
 task run(type:JavaExec, dependsOn:'classes') {
-    main = 'org.mbte.gretty.examples.SimpleServer'
+    main = 'org.mbte.gretty.examples.Launcher'
     classpath =  sourceSets.main.runtimeClasspath
     jvmArgs = ['-server',  '-Xms4096m', '-Xmx4096m']
 }
@@ -59,7 +59,7 @@ task createLaunchScript << {
 
     def jvmArgs = '-server -Xmx4096m -Xms4096m'
 
-    new File('server').text = "/usr/bin/java -cp $classpath $jvmArgs org.mbte.gretty.examples.SimpleServer"
+    new File('server').text = "/usr/bin/java -cp $classpath $jvmArgs org.mbte.gretty.examples.Launcher"
     Runtime.runtime.exec "chmod +x server"
 
     new File('loader').text = "/usr/bin/java -cp $classpath $jvmArgs org.mbte.gretty.examples.LoadClient"
@@ -67,111 +67,6 @@ task createLaunchScript << {
 }
 
 build.dependsOn << createLaunchScript
-
-task env(dependsOn:'classes') {
-//    def gcl = new GroovyClassLoader()
-//    def classpath
-//    for(f in sourceSets.main.runtimeClasspath.files) {
-//        if(!classpath)
-//            classpath = f.absolutePath
-//        else
-//            classpath = classpath + ':' + f.absolutePath
-//        gcl.addClasspath f.absolutePath
-//    }
-//
-//    File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
-//    if(!credentialsFile.exists()) {
-//        throw new IOException(credentialsFile.absolutePath)
-//    }
-//
-//    def awsCredentials = gcl.loadClass('com.amazonaws.auth.PropertiesCredentials').newInstance(credentialsFile)
-//    def awsClient = gcl.loadClass('com.amazonaws.services.ec2.AmazonEC2AsyncClient').newInstance(awsCredentials)
-//
-//    String role, foreignRedis
-//    Process activeProcess
-//
-//    def ip = InetAddress.localHost.hostAddress
-//
-//    def startRole = { String r ->
-//        println "Starting role '$r'"
-//        switch(r) {
-//            case 'server':
-//                def cmd = "/usr/bin/java -cp $classpath -server -Xmx4096m -Xms4096m org.mbte.gretty.examples.SimpleServer".toString()
-//                activeProcess = cmd.execute()
-//            break
-//
-//            case 'redis':
-//                def cmd = "../redis-2.0.4/redis-server redis.conf".toString()
-//                activeProcess = cmd.execute()
-//            break
-//        }
-//
-//        activeProcess?.consumeProcessOutputStream(System.out)
-//        activeProcess?.consumeProcessErrorStream(System.err)
-//    }
-//
-//    def stopRole = { String r ->
-//        activeProcess?.destroy()
-//        activeProcess = null
-//
-//        if(r) {
-//            println "Stopping role '$r'"
-//        }
-//    }
-//
-//    String myInstance
-//
-//    for(;;) {
-//        def instances = awsClient.describeInstances()
-//
-//        if(!myInstance) {
-//            for(r in instances.reservations) {
-//                for(i in r.instances) {
-//                  if(ip == i.privateIpAddress) {
-//                      myInstance = r.groupNames [0]
-//                      break
-//                  }
-//                }
-//            }
-//        }
-//
-//        def myRole = '', myRedis = ''
-//        for(r in instances.reservations) {
-//            if(r.groupNames[0] == myInstance) {
-//                for(i in r.instances) {
-//                  if(ip == i.privateIpAddress) {
-//                      println "I am $i.privateIpAddress $i.tags"
-//                      for(t in i.tags) {
-//                          if(t.key.equalsIgnoreCase('role')) {
-//                              myRole = t.value
-//                          }
-//                      }
-//                  }
-//                  else {
-//                      for(t in i.tags) {
-//                          if(t.key.equalsIgnoreCase('role') && t.value.equalsIgnoreCase('redis')) {
-//                              myRedis = i.privateIpAddress
-//                          }
-//                      }
-//                  }
-//                }
-//            }
-//        }
-//
-//        if(myRole == '') {
-//            myRole = 'server'
-//        }
-//
-//        myRole = myRole.toLowerCase()
-//        if(myRole != role) {
-//            stopRole(role)
-//            role = myRole
-//            startRole(role)
-//        }
-//
-//        Thread.sleep 15000
-//    }
-}
 
 task wrapper(type: Wrapper) {
     gradleVersion = '0.9-rc-3'

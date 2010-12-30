@@ -19,19 +19,32 @@ package org.mbte.gretty.examples
 import com.amazonaws.services.ec2.AmazonEC2Client
 import com.amazonaws.auth.PropertiesCredentials
 import com.amazonaws.services.ec2.model.Instance
-import com.amazonaws.services.ec2.model.DescribeInstancesResult
+import groovypp.channels.LoopChannel
+import com.amazonaws.services.ec2.model.Reservation
+import java.util.concurrent.Executors
 
-@Typed class Ec2Env {
+@Typed class Ec2Env extends LoopChannel {
     private PropertiesCredentials awsCredentials
     private AmazonEC2Client awsClient
 
-    protected String myIp = InetAddress.localHost.hostAddress
+    private String myIp = InetAddress.localHost.hostAddress
 
-    protected HashMap<String,Instance> myInstances = [:]
+    private HashMap<String,Instance> myInstances = [:]
 
-    Instance myInstance
+    private Reservation myReservation
+    private Instance myInstance
 
-    Ec2Env () {
+    static class ForeignInstanceUpdate {
+        Instance current, old
+    }
+
+    static class OwnInstanceUpdate {
+        Instance current, old
+    }
+
+    void doStartup() {
+        println('Starting EC2 monitor...')
+
         File credentialsFile = [System.getProperty('user.home') + '/.aws/credentials']
         if(!credentialsFile.exists() || !credentialsFile.canRead()) {
             credentialsFile = ['../.aws/credentials']
@@ -44,113 +57,67 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult
         awsClient = [awsCredentials]
 
         def instances = awsClient.describeInstances()
-        initCluster(instances)
 
-        startClusterMonitoring()
-    }
-
-    protected void initCluster(DescribeInstancesResult instances) {
         for (r in instances.reservations) {
             for (i in r.instances) {
                 if (myIp == i.privateIpAddress) {
                     myInstance = i
+                    myReservation = r
                     break
                 }
             }
         }
+
+        owner << new OwnInstanceUpdate(current: myInstance, old: null)
+
+        super.doStartup()
     }
 
-    protected void startClusterMonitoring () {
-        Thread t = [
-            run: {
-                String myGroup
-                for(;;) {
-                    def instances = awsClient.describeInstances()
+    void doShutdown () {
+        println('Stopping EC2 monitor...')
+        super.doShutdown()
+    }
 
-                    synchronized(this) {
-                        Map<String,Instance> insts = [:]
+    protected boolean doLoopAction() {
+        def instances = awsClient.describeInstances()
 
-                        Set<Instance> newi = []
-                        for(r in instances.reservations) {
-                            if(!myGroup || r.groupNames[0] == myGroup) {
-                                for(i in r.instances) {
-                                  if(myIp == i.privateIpAddress) {
-                                      def old = myInstance
-                                      myInstance = i
-                                      onOwnInfoUpdate i, old
-                                  }
-                                  else {
-                                      insts[i.instanceId] = i
-                                      def old = myInstances[i.instanceId]
-                                      myInstances[i.instanceId] = i
-                                      if(!old) {
-                                          newi << i
-                                          onInstanceAppear i
-                                      }
-                                      else {
-                                          onInstanceUpdate i, old
-                                      }
-                                  }
-                                }
-                            }
-                        }
+        Map<String,Instance> insts = [:]
 
-                        Set<String> gone = []
-                        for(ii in myInstances.entrySet()) {
-                            if(!insts.containsKey(ii.key)) {
-                                gone << ii.key
-                            }
-                        }
-                        for(g in gone) {
-                            onInstanceDisappear myInstances.remove(g)
-                        }
-                    }
-                    Thread.currentThread().sleep(15000)
+        for(r in instances.reservations) {
+            if(!myReservation || r.groupNames[0] == myReservation.groupNames[0]) {
+                for(i in r.instances) {
+                  if(myIp == i.privateIpAddress) {
+                      def old = myInstance
+                      myInstance = i
+                      owner << new OwnInstanceUpdate(current: i, old: old)
+                  }
+                  else {
+                      insts[i.instanceId] = i
+                      def old = myInstances[i.instanceId]
+                      myInstances[i.instanceId] = i
+                      if(!old) {
+                          owner << new ForeignInstanceUpdate(current: i, old: null)
+                      }
+                      else {
+                          owner << new ForeignInstanceUpdate(current: i, old: old)
+                      }
+                  }
                 }
             }
-        ]
-        t.start()
-    }
-
-    static class Listener {
-        protected void onOwnInfoUpdate(Instance currentInstance, Instance oldInstance) {
         }
 
-        protected void onInstanceUpdate(Instance currentInstance, Instance oldInstance) {
+        Set<String> gone = []
+        for(ii in myInstances.entrySet()) {
+            if(!insts.containsKey(ii.key)) {
+                gone << ii.key
+            }
+        }
+        for(g in gone) {
+            def old = myInstances.remove(g)
+            owner << new ForeignInstanceUpdate(current: null, old: old)
         }
 
-        protected void onInstanceAppear(Instance currentInstance) {
-        }
-
-        protected void onInstanceDisappear(Instance oldInstance) {
-        }
-    }
-
-    private final List<Listener> listeners = []
-
-    protected void onOwnInfoUpdate(Instance currentInstance, Instance oldInstance) {
-        for(l in listeners)
-            l.onOwnInfoUpdate currentInstance, oldInstance
-    }
-
-    protected void onInstanceUpdate(Instance currentInstance, Instance oldInstance) {
-        for(l in listeners)
-            l.onInstanceUpdate currentInstance, oldInstance
-    }
-
-    protected void onInstanceAppear(Instance currentInstance) {
-        for(l in listeners)
-            l.onInstanceAppear currentInstance
-    }
-
-    protected void onInstanceDisappear(Instance oldInstance) {
-        for(l in listeners)
-            l.onInstanceDisappear oldInstance
-    }
-
-    Map<String,Instance> getInstances () {
-        synchronized(this) {
-            return myInstances.clone()
-        }
+        Thread.currentThread().sleep(15000)
+        return  true
     }
 }
