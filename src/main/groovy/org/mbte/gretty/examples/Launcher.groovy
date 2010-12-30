@@ -39,6 +39,7 @@ class Launcher extends SupervisedChannel {
         switch(message) {
             case Ec2Env.OwnInstanceUpdate:
                 def role = message.current?.role ?: 'local server'
+                println message.current?.role
 
                 if(myRole != role) {
                     switch (role) {

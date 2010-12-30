@@ -84,7 +84,7 @@ import java.util.concurrent.Executors
         Map<String,Instance> insts = [:]
 
         for(r in instances.reservations) {
-            if(!myReservation || r.groupNames[0] == myReservation.groupNames[0]) {
+            if(r.groupNames[0] == myReservation.groupNames[0]) {
                 for(i in r.instances) {
                   if(myIp == i.privateIpAddress) {
                       def old = myInstance
